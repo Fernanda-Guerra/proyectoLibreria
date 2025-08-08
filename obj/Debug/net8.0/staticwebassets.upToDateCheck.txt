@@ -1,0 +1,13 @@
+wwwroot\app.css
+wwwroot\bootstrap\bootstrap.min.css
+wwwroot\bootstrap\bootstrap.min.css.map
+wwwroot\favicon.png
+wwwroot\fonts\AbrilFatface-Regular.ttf
+wwwroot\Imagenes\._donQuijote.jpeg
+wwwroot\Imagenes\1984.jpeg
+wwwroot\Imagenes\BttM.jpeg
+wwwroot\Imagenes\cien-anos.jpeg
+wwwroot\Imagenes\donQuijote.jpeg
+wwwroot\Imagenes\fahrenheit.jpeg
+wwwroot\Imagenes\libreria.jpg
+wwwroot\Imagenes\senor-anillos.jpeg
