@@ -1,0 +1,58 @@
+﻿@using PruebaBlazor.Services
+@implements IDisposable
+@inject UserStateService UserState
+
+<div class="top-row ps-3 navbar navbar-dark" style="background-color: #E8DCCB;">
+    <div class="container-fluid ">
+        <a class="navbar-brand" href="">Laberinto de los Libros</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link home-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="libros">
+                <span class="bi bi-book-fill-nav-menu" aria-hidden="true"></span> Catálogo
+            </NavLink>
+        </div>
+
+        @* Estos enlaces solo se mostrarán si el usuario ha iniciado sesión *@
+        @if (UserState.IsLoggedIn)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="carrito">
+                    <span class="bi bi-cart-fill-nav-menu" aria-hidden="true"></span> Mi Carrito
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="mis-ordenes">
+                    <span class="bi bi-receipt-long-nav-menu" aria-hidden="true"></span> Mis Órdenes
+                </NavLink>
+            </div>
+        }
+    </nav>
+</div>
+
+@code {
+    // Este código es necesario para que el menú se actualice
+    // cuando el usuario inicia o cierra sesión.
+    protected override void OnInitialized()
+    {
+        UserState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        UserState.OnChange -= StateHasChanged;
+    }
+}
+

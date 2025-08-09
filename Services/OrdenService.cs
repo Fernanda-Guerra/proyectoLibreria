@@ -37,12 +37,22 @@ namespace PruebaBlazor.Services
                 {
                     LibroId = item.LibroId,
                     Cantidad = item.Cantidad,
-                    // Guardamos el precio de ese momento
                     Precio = item.Precio
                 }).ToList()
             };
 
             _context.Ordenes.Add(orden);
+
+            // Update stock for each book
+            foreach (var item in items)
+            {
+                var libro = await _context.Libros.FindAsync(item.LibroId);
+                if (libro != null)
+                {
+                    libro.Stock -= item.Cantidad;
+                }
+            }
+
             await _context.SaveChangesAsync();
             return orden.Id;
         }

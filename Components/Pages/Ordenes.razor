@@ -1,0 +1,82 @@
+﻿@page "/mis-ordenes"
+@using PruebaBlazor.Models
+@using PruebaBlazor.Services
+@using Domain
+@inject IOrdenService OrdenService
+@inject UserStateService UserState
+@inject NavigationManager Navigation
+@inject NotificationService Notifier
+
+<h1 class="text-center mb-4" style="color: #5C4432;">Mis Órdenes</h1>
+
+@if (ordenes == null)
+{
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 40vh;">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Cargando órdenes...</span>
+        </div>
+    </div>
+}
+else if (!ordenes.Any())
+{
+    <div class="alert alert-info text-center">No tienes órdenes registradas.</div>
+}
+else
+{
+    <div class="row justify-content-center">
+        @foreach (var orden in ordenes)
+        {
+            <div class="col-md-8 mb-4">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #FCF8F0;">
+                        <div>
+                            <strong>Orden #@orden.Id</strong>
+                            <span class="mx-2">|</span>
+                            <span>@orden.Fecha.ToShortDateString()</span>
+                            <span class="mx-2">|</span>
+                            <span>Total: <b>@orden.Total.ToString("C")</b></span>
+                        </div>
+                        <button class="btn btn-success btn-sm" @onclick="() => EnviarAKindle(orden.Id)">
+                            Enviar pedido a tu kindle
+                        </button>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var item in orden.OrdenItems)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <b>Libro ID:</b> @item.LibroId
+                                    <span class="mx-2">|</span>
+                                    <b>Cantidad:</b> @item.Cantidad
+                                    <span class="mx-2">|</span>
+                                    <b>Precio:</b> @item.Precio.ToString("C")
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Orden>? ordenes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!UserState.IsLoggedIn)
+        {
+            ordenes = new List<Orden>();
+            return;
+        }
+
+        var userId = UserState.CurrentUser!.Id;
+        ordenes = await OrdenService.GetOrdenesAsync(userId);
+    }
+
+    private void EnviarAKindle(int ordenId)
+    {
+        Notifier.Show("Tu pedido fue enviado, disfruta tu lectura!");
+    }
+}

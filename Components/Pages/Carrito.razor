@@ -1,0 +1,123 @@
+﻿@page "/carrito"
+@using PruebaBlazor.Services
+@using PruebaBlazor.Models
+@inject ICarritoService CarritoService
+@inject UserStateService UserState
+@inject NavigationManager Navigation
+@inject IOrdenService OrdenService
+@inject NotificationService Notifier
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow p-4" style="max-width: 900px; width: 100%; background-color: #FCF8F0;">
+        <h3 class="text-center mb-4" style="color: #5C4432;">Mi Carrito de Compras</h3>
+        @if (items == null)
+        {
+            <p class="text-center"><em>Cargando...</em></p>
+        }
+        else if (!items.Any())
+        {
+            <p class="text-center">Tu carrito está vacío.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th></th>
+                            <th>Producto</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in items)
+                        {
+                            <tr>
+                                <td>
+                                    <img src="@item.ImagenUrl" alt="@item.Titulo" style="height: 48px; width: 48px; object-fit: cover; border-radius: 6px;" />
+                                </td>
+                                <td>@item.Titulo</td>
+                                <td>@item.Precio.ToString("C")</td>
+                                <td>@item.Cantidad</td>
+                                <td>@item.Subtotal.ToString("C")</td>
+                                <td>
+                                    <button class="btn eliminar-btn btn-sm" @onclick="() => EliminarItem(item.CarritoItemId)">
+                                        <span class="bi bi-trash"></span> Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-end"><strong>Total</strong></td>
+                            <td><strong>@total.ToString("C")</strong></td>
+                            <td>
+                                <button class="btn finalizar-btn" @onclick="FinalizarCompra" disabled="@(!items.Any())">
+                                    Finalizar Compra
+                                </button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<CarritoItemModel>? items;
+    private decimal total = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!UserState.IsLoggedIn)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        var userId = UserState.CurrentUser!.Id;
+        await CargarCarrito(userId);
+    }
+
+    private async Task CargarCarrito(int userId)
+    {
+        items = await CarritoService.GetCarritoAsync(userId);
+        total = await CarritoService.GetTotalCarritoAsync(userId);
+        StateHasChanged();
+    }
+
+    private async Task EliminarItem(int carritoItemId)
+    {
+        var userId = UserState.CurrentUser!.Id;
+        await CarritoService.RemoveFromCarritoAsync(carritoItemId);
+        await CargarCarrito(userId);
+
+        var itemCount = await CarritoService.GetItemsCountAsync(userId);
+        UserState.SetCartItemCount(itemCount);
+    }
+
+    private async Task FinalizarCompra()
+    {
+        if (items == null || !items.Any()) return;
+
+        var userId = UserState.CurrentUser!.Id;
+
+        await OrdenService.CrearOrdenAsync(userId, items);
+        await CarritoService.ClearCarritoAsync(userId);
+
+        UserState.SetCartItemCount(0);
+        items.Clear();
+        total = 0;
+
+        Notifier.Show("¡Compra realizada con éxito!");
+
+        
+
+        StateHasChanged();
+    }
+}

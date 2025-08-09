@@ -1,0 +1,75 @@
+﻿@using PruebaBlazor.Components.Shared
+@using PruebaBlazor.Services
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject UserStateService UserState
+@inject NavigationManager Navigation
+
+
+<div class="page">
+    <div style="background-image:none;background-color:#FCF8F0;" class="sidebar">
+        <NavMenu />
+    </div>
+    <main style="background-color: #FCF8F0;">
+        <div class="main-top-row px-4 d-flex justify-content-end align-items-center" style="min-height: 70px;">
+            @if (UserState.IsLoggedIn)
+            {
+                <span class="nav-link">Hola, @UserState.CurrentUser?.Nombre</span>
+                //<a href="#" @onclick="Logout" style="cursor:pointer;">Cerrar sesión</a>
+                <a class="nav-link" href="/carrito">
+                    <img src="Imagenes/carrito.png" alt="Carrito" style="height: 24px; vertical-align: middle;" />
+                    (@UserState.CartItemCount)
+                </a>
+                <a class="nav-link" href="#" @onclick="Logout" style="cursor:pointer;">Cerrar sesión</a>
+            }
+            else
+            {
+                <a class="nav-link" href="/login">Iniciar sesión</a>
+            }
+        </div>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+<Notification />
+
+
+
+<style>
+    .nav-link {
+        color: #5C4432 !important;
+    }
+</style>
+
+<style>
+    .bodyColors-link{
+        color: #C6B3A0 !important;
+    }
+</style>
+
+@code {
+    protected override void OnInitialized()
+    {
+        UserState.OnChange += StateHasChanged;
+    }
+
+    void IDisposable.Dispose()
+    {
+        UserState.OnChange -= StateHasChanged;
+    }
+
+    void Logout()
+    {
+        UserState.SetCurrentUser(null);
+        UserState.SetCartItemCount(0);
+        Navigation.NavigateTo("/login");
+    }
+}

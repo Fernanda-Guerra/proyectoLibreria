@@ -1,0 +1,26 @@
+﻿@using PruebaBlazor.Services
+@implements IDisposable
+@inject NotificationService Notification
+
+@if (Notification.IsVisible)
+{
+    <div class="toast-container">
+        <div class="toast-message">
+            @Notification.Message
+        </div>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Nos suscribimos al evento para que el componente se actualice cuando cambie el estado
+        Notification.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        // Nos damos de baja del evento para evitar fugas de memoria
+        Notification.OnChange -= StateHasChanged;
+    }
+}

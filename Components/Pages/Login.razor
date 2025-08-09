@@ -1,0 +1,61 @@
+@page "/login"
+@using PruebaBlazor.Services
+@using PruebaBlazor.Models
+@inject IAuthService AuthService
+@inject UserStateService UserState
+@inject NavigationManager Navigation
+@inject ICarritoService CarritoService
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow p-4" style="max-width: 400px; width: 100%; background-color: #FCF8F0;">
+        <h3 class="text-center mb-4" style="color: #5C4432;">Iniciar sesión</h3>
+        <EditForm Model="@loginModel" OnValidSubmit="OnLogin">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label class="form-label" style="color: #6F503A">Email:</label>
+                <InputText @bind-Value="loginModel.Email" class="form-control" />
+                <ValidationMessage For="@(() => loginModel.Email)" class="text-danger small" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" style="color: #6F503A">Contraseña:</label>
+                <InputText @bind-Value="loginModel.Password" type="password" class="form-control" />
+                <ValidationMessage For="@(() => loginModel.Password)" class="text-danger small" />
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mb-2">Entrar</button>
+        </EditForm>
+        <p class="text-danger text-center">@Mensaje</p>
+        <div class="mt-3 text-center" style="color: #6F503A">
+            <span>¿No tienes una cuenta? </span>
+            <a href="/registro">Regístrate aquí</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private string Mensaje = "";
+
+    private async Task OnLogin()
+    {
+        var (result, usuario) = await AuthService.LoginAsync(loginModel.Email, loginModel.Password);
+
+        switch (result)
+        {
+            case LoginResult.Success:
+                if (usuario != null)
+                {
+                    UserState.SetCurrentUser(usuario);
+                    var itemCount = await CarritoService.GetItemsCountAsync(usuario.Id);
+                    UserState.SetCartItemCount(itemCount);
+                    Navigation.NavigateTo("/");
+                }
+                break;
+            case LoginResult.UserNotFound:
+                Mensaje = "El usuario no existe.";
+                break;
+            case LoginResult.WrongPassword:
+                Mensaje = "La contraseña es incorrecta.";
+                break;
+        }
+    }
+}

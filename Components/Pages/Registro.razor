@@ -1,0 +1,66 @@
+﻿@page "/registro"
+@using PruebaBlazor.Models
+@using PruebaBlazor.Services
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject NotificationService Notifier
+
+//ESTE ES EL RAZOR PARA EL REGISTRO DE NUEVOS USUARIOS
+
+<h3>Crear una nueva cuenta</h3>
+
+<EditForm Model="@registroModel" OnValidSubmit="HandleRegistration">
+    <DataAnnotationsValidator />
+    
+    <div class="form-group mb-2">
+        <label>Nombre:</label>
+        <InputText class="form-control" @bind-Value="registroModel.Nombre" />
+        <ValidationMessage For="@(() => registroModel.Nombre)" />
+    </div>
+    <div class="form-group mb-2">
+        <label>Email:</label>
+        <InputText class="form-control" @bind-Value="registroModel.Email" />
+        <ValidationMessage For="@(() => registroModel.Email)" />
+    </div>
+    <div class="form-group mb-2">
+        <label>Contraseña:</label>
+        <InputText class="form-control" type="password" @bind-Value="registroModel.Password" />
+        <ValidationMessage For="@(() => registroModel.Password)" />
+    </div>
+    <div class="form-group mb-3">
+        <label>Confirmar Contraseña:</label>
+        <InputText class="form-control" type="password" @bind-Value="registroModel.ConfirmPassword" />
+        <ValidationMessage For="@(() => registroModel.ConfirmPassword)" />
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Registrarse</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p class="text-danger mt-2">@errorMessage</p>
+}
+
+@code {
+    private RegistroModel registroModel = new();
+    private string errorMessage = "";
+
+    private async Task HandleRegistration()
+    {
+        errorMessage = ""; // Limpiamos errores previos
+        
+        var success = await AuthService.RegisterAsync(registroModel.Email, registroModel.Password, registroModel.Nombre);
+
+        if (success)
+        {
+            // Mostramos notificación y redirigimos al login
+            Notifier.Show("¡Registro exitoso! Ahora puedes iniciar sesión.");
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            // El único caso de fallo en nuestro servicio es que el email ya exista
+            errorMessage = "Este correo electrónico ya está en uso.";
+        }
+    }
+}

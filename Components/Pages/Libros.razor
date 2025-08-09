@@ -1,0 +1,76 @@
+﻿@page "/libros"
+@using Domain
+@using PruebaBlazor.Services
+@using PruebaBlazor.Data
+@inject ILibroService LibroService
+@inject ICarritoService CarritoService
+@inject UserStateService UserState
+@inject NotificationService Notifier
+@inject NavigationManager Navigation
+
+
+<h3 style="text-align: center; color: #5C4432">Nuestro catálogo de Libros</h3>
+
+@if (libros == null)
+{
+    <p><em>Cargando libros...</em></p>
+}
+else
+{
+    <!-- "flex-wrap justify-content-center w-100" centers the cards" -->
+    <div class="d-flex flex-wrap justify-content-center w-100">
+        @foreach (var libro in libros)
+        {
+            <!-- changed m-2 to m-4 so theres a bigger gap in between cards -->
+            <div class="card m-4" style="width: 18rem;">
+                <img src="@libro.ImagenUrl" class="card-img-top" alt="Portada de @libro.Titulo" style="height: 200px; object-fit: cover;">
+
+                <div class="card-body d-flex flex-column text-center">
+                    <h5 class="card-title nav-link">@libro.Titulo</h5>
+                    <h6 class="card-subtitle bodyColors-link mb-2 text-muted">@libro.Autor</h6>
+                    <p class="card-text bodyColors-link">@libro.Descripcion</p>
+                    <div class="mt-auto">
+                        <p class="font-weight-bold bodyColors-link">Precio: @libro.Precio.ToString("C")</p>
+                        <p class="card-text bodyColors-link">Disponibles: @libro.Stock</p>
+                        <button class="btn btn-primary bodyColors-link" @onclick="() => AddToCart(libro)">
+                            Añadir al carrito
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Libro>? libros;
+
+    protected override async Task OnInitializedAsync()
+    {
+        libros = await LibroService.GetLibrosAsync();
+    }
+
+    private async Task AddToCart(Libro libro)
+    {
+        if (libro.Stock <= 0)
+        {
+            Notifier.Show("Lo sentimos, no contamos con ese libro por el momento.");
+            return;
+        }
+
+        if (!UserState.IsLoggedIn)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        var userId = UserState.CurrentUser!.Id;
+
+        await CarritoService.AddToCarritoAsync(userId, libro.Id, 1);
+
+        var itemCount = await CarritoService.GetItemsCountAsync(userId);
+        UserState.SetCartItemCount(itemCount);
+
+        Notifier.Show("¡Libro añadido al carrito!");
+    }
+}
